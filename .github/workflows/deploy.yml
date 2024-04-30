@@ -9,8 +9,6 @@ on:
 env:
   AWS_REGION: us-east-1
   S3BUCKET: saeed-app
-  S3OBJECT: app_${DATE}.tar.gz
-
 
 jobs:
   build:
@@ -23,7 +21,8 @@ jobs:
     - name: Package Repo
       run: |
         DATE=$(date +%Y%m%d)
-        git archive --format=tar.gz --output=${{env.S3OBJECT}} HEAD
+        S3OBJECT="app_${DATE}.tar.gz"
+        git archive --format=tar.gz --output=${S3OBJECT} HEAD
         pwd
         ls -l
       
