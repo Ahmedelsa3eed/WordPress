@@ -9,6 +9,7 @@ on:
 env:
   AWS_REGION: us-east-1
   S3BUCKET: saeed-app
+  S3OBJECT: app_${DATE}.tar.gz
 
 
 jobs:
@@ -22,7 +23,7 @@ jobs:
     - name: Package Repo
       run: |
         DATE=$(date +%Y%m%d)
-        git archive --format=tar.gz --output=app_${DATE}.tar.gz HEAD
+        git archive --format=tar.gz --output=${{env.S3OBJECT}} HEAD
         pwd
         ls -l
       
@@ -35,7 +36,7 @@ jobs:
         AWS_REGION: ${{ env.AWS_REGION }}
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        SOURCE_DIR: app_${DATE}.tar.gz
+        SOURCE_DIR: ${{ env.S3OBJECT }}
 
     - name: Deploy to Auto Scaling Group
       run: |
