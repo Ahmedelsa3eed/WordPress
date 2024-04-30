@@ -25,17 +25,16 @@ jobs:
         git archive --format=tar.gz --output=${S3OBJECT} HEAD
         mkdir archive
         mv ${S3OBJECT} archive/
-        pwd
-        ls -l
+        ls archive
       
-    # - name: Upload to S3
-    #   uses: jakejarvis/s3-sync-action@master
-    #   env:
-    #     AWS_S3_BUCKET: ${{ env.S3BUCKET }}
-    #     AWS_REGION: ${{ env.AWS_REGION }}
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     SOURCE_DIR: archive
+    - name: Upload to S3
+      uses: jakejarvis/s3-sync-action@master
+      env:
+        AWS_S3_BUCKET: ${{ env.S3BUCKET }}
+        AWS_REGION: ${{ env.AWS_REGION }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        SOURCE_DIR: 'archive'
 
     - name: Deploy to Auto Scaling Group
       run: |
