@@ -22,7 +22,9 @@ jobs:
     - name: Package Repo
       run: |
         DATE=$(date +%Y%m%d)
-        tar -czvf app_${DATE}.tar.gz . --exclude=*.tar.gz 
+        git archive --format=tar.gz --output=app_${DATE}.tar.gz HEAD
+        pwd
+        ls -l
       
     - name: Upload to S3
       uses: jakejarvis/s3-sync-action@master
