@@ -45,8 +45,8 @@ jobs:
     - name: Get AutoScaling Group Instances IDs
       id: asg
       run: |
-        instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
-        echo "::set-output name=instance_ids::$instance_ids"
+          # Get the instance IDs of instances in the Auto Scaling Group
+          export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
 
     - name: AWS SSM Send-Command
       uses: peterkimzz/aws-ssm-send-command@master
@@ -55,7 +55,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        instance-ids: ${{ steps.asg.outputs.instance_ids }}
+        instance-ids: $instance_ids
 
         working-directory: /home/ec2-user
         command: ls -al
