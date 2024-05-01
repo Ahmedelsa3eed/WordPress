@@ -33,7 +33,7 @@ jobs:
       id: object
       run: |
         DATE=$(date +%Y%m%d)
-        s3object=$(echo "app_${DATE}.tar.gz")
+        export s3object=$(echo "app_${DATE}.tar.gz")
         # s3object=$(echo "app_20240501.tar.gz")
         echo "S3 Object: $s3object"
         echo "s3object=$s3object" >> $GITHUB_OUTPUT
