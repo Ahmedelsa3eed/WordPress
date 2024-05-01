@@ -37,7 +37,7 @@ jobs:
         s3object=$(echo "app_20240501.tar.gz")
         echo "S3 Object: $s3object"
         echo "s3object=$s3object" >> $GITHUB_OUTPUT
-        echo ${{ steps.object.outputs.s3object }}
+        echo "${{ steps.object.outputs.s3object }}"
 
         
     # - name: Package Repo
