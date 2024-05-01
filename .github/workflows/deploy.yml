@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      instanceids: ${{ steps.create.outputs.instanceids }}
-      s3object: ${{ steps.create.outputs.s3object }}
+      instanceids: ${{ steps.asg.outputs.instanceids }}
+      s3object: ${{ steps.object.outputs.s3object }}
 
     steps:
     - name: Checkout Repository
@@ -29,6 +29,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     
     - name: Set S3 Object name
+      id: object
       run: |
         DATE=$(date +%Y%m%d)
         # export s3object="app_${DATE}.tar.gz"
@@ -57,6 +58,7 @@ jobs:
       id: asg
       run: |
         instanceids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
+        echo "Instance IDs: $instanceids"
         echo "{instanceids}={$instanceids}" >> $GITHUB_OUTPUT
 
     - name: AWS SSM Send-Command
@@ -66,7 +68,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        instance-ids: ${{ steps.create.outputs.instanceids }}
+        instance-ids: ${{ steps.asg.outputs.instanceids }}
 
         working-directory: /home/ec2-user
         command: ls -al
@@ -81,12 +83,12 @@ jobs:
     #     export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
     #     echo "Instance IDs: $instance_ids"
 
-    #     export object_url=$(aws s3 presign s3://saeed-app/${{ steps.create.outputs.s3object }})
+    #     export object_url=$(aws s3 presign s3://saeed-app/${{ steps.object.outputs.s3object }})
     #     echo "Object URL: $object_url"
 
     #     echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
 
-    #     echo $${{ steps.create.outputs.s3object }}
+    #     echo $${{ steps.object.outputs.s3object }}
 
     #     # Iterate over each instance
     #     for instance_id in $instance_ids; do
@@ -94,6 +96,6 @@ jobs:
     #       public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
 
     #       # SSH into the instance and download the object from the S3 bucket
-    #       ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget $object_url -O ${{ steps.create.outputs.s3object }}"
+    #       ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget $object_url -O ${{ steps.object.outputs.s3object }}"
 
     #     done
