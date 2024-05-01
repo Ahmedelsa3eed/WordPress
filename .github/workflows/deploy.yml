@@ -57,7 +57,7 @@ jobs:
     - name: Get AutoScaling Group Instances IDs
       id: asg
       run: |
-        instanceids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
+        export instanceids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
         echo "Instance IDs: $instanceids"
         echo "{instanceids}={$instanceids}" >> $GITHUB_OUTPUT
 
