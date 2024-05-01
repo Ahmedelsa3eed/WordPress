@@ -89,6 +89,13 @@ jobs:
           public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
 
           # SSH into the instance and download the object from the S3 bucket
-          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget '$object_url' -O ${{ needs.build.outputs.s3object }}"
+          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip '
+              
+              cd /var/www/html
+              sudo wget "$object_url" -O ${{ needs.build.outputs.s3object }}
+              sudo tar -xvzf ${{ needs.build.outputs.s3object }}
+              sudo rm -rf ${{ needs.build.outputs.s3object }}
+              sudo systemctl restart httpd
+              '
 
         done
