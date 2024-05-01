@@ -67,9 +67,11 @@ jobs:
         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_PEM }}
       run: |
         # Get the instance IDs of instances in the Auto Scaling Group
-        instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
+        export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
+        echo "Instance IDs: $instance_ids"
 
-        object_url=$(aws s3 presign s3://saeed-app/${S3OBJECT})
+        export object_url=$(aws s3 presign s3://saeed-app/${S3OBJECT})
+        echo "Object URL: $object_url"
 
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
 
