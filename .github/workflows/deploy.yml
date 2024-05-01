@@ -14,6 +14,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    outputs:
+      instanceids: ${{ steps.create.outputs.instanceids }}
+      s3object: ${{ steps.create.outputs.s3object }}
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -27,9 +31,11 @@ jobs:
     - name: Set S3 Object name
       run: |
         DATE=$(date +%Y%m%d)
-        # export S3OBJECT="app_${DATE}.tar.gz"
-        export S3OBJECT="app_20240501.tar.gz"
-        echo "S3 Object: $S3OBJECT" 
+        # export s3object="app_${DATE}.tar.gz"
+        export s3object="app_20240501.tar.gz"
+        echo "S3 Object: $s3object"
+        echo "s3object=$s3object" >> $GITHUB_OUTPUT
+
         
     # - name: Package Repo
     #   run: |
@@ -75,7 +81,7 @@ jobs:
         export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
         echo "Instance IDs: $instance_ids"
 
-        export object_url=$(aws s3 presign s3://saeed-app/${S3OBJECT})
+        export object_url=$(aws s3 presign s3://saeed-app/${{ steps.create.outputs.s3object }})
         echo "Object URL: $object_url"
 
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
@@ -86,6 +92,6 @@ jobs:
           public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
 
           # SSH into the instance and download the object from the S3 bucket
-          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget $object_url -O ${S3OBJECT}"
+          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget $object_url -O ${{ steps.create.outputs.s3object }}"
 
         done
