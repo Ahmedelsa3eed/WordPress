@@ -53,45 +53,47 @@ jobs:
     #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     #     SOURCE_DIR: 'archive'
 
-    # - name: Get AutoScaling Group Instances IDs
-    #   id: asg
-    #   run: |
-    #     instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
-    #     echo "{instance_ids}={$instance_ids}" >> $GITHUB_OUTPUT
-
-    # - name: AWS SSM Send-Command
-    #   uses: peterkimzz/aws-ssm-send-command@master
-    #   id: ssm
-    #   with:
-    #     aws-region: ${{ env.AWS_REGION }}
-    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     instance-ids: $GITHUB_OUTPUT
-
-    #     working-directory: /home/ec2-user
-    #     command: ls -al
-    #     comment: Hello world!
-
-
-    - name: Deploy to Auto Scaling Group
-      env:
-        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_PEM }}
+    - name: Get AutoScaling Group Instances IDs
+      id: asg
       run: |
-        # Get the instance IDs of instances in the Auto Scaling Group
-        export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
-        echo "Instance IDs: $instance_ids"
+        instanceids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
+        echo "{instanceids}={$instanceids}" >> $GITHUB_OUTPUT
 
-        export object_url=$(aws s3 presign s3://saeed-app/${{ steps.create.outputs.s3object }})
-        echo "Object URL: $object_url"
+    - name: AWS SSM Send-Command
+      uses: peterkimzz/aws-ssm-send-command@master
+      id: ssm
+      with:
+        aws-region: ${{ env.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        instance-ids: ${{ steps.create.outputs.instanceids }}
 
-        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+        working-directory: /home/ec2-user
+        command: ls -al
+        comment: Hello world!
 
-        # Iterate over each instance
-        for instance_id in $instance_ids; do
-          # Get the public IP address of the instance
-          public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
 
-          # SSH into the instance and download the object from the S3 bucket
-          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget $object_url -O ${{ steps.create.outputs.s3object }}"
+    # - name: Deploy to Auto Scaling Group
+    #   env:
+    #     PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_PEM }}
+    #   run: |
+    #     # Get the instance IDs of instances in the Auto Scaling Group
+    #     export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
+    #     echo "Instance IDs: $instance_ids"
 
-        done
+    #     export object_url=$(aws s3 presign s3://saeed-app/${{ steps.create.outputs.s3object }})
+    #     echo "Object URL: $object_url"
+
+    #     echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+
+    #     echo $${{ steps.create.outputs.s3object }}
+
+    #     # Iterate over each instance
+    #     for instance_id in $instance_ids; do
+    #       # Get the public IP address of the instance
+    #       public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
+
+    #       # SSH into the instance and download the object from the S3 bucket
+    #       ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget $object_url -O ${{ steps.create.outputs.s3object }}"
+
+    #     done
