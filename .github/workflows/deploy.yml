@@ -9,7 +9,6 @@ on:
 env:
   AWS_REGION: us-east-1
   S3BUCKET: saeed-app
-  INSTANCE_ID: "i-0fb6cadde51cd1886"
 
 jobs:
   build:
