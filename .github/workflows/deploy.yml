@@ -16,6 +16,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Set Date
+      run: |
+        DATE=$(date +%Y%m%d)
+        echo "app_${DATE}.tar.gz" >> $GITHUB_ENV
+
     - name: Checkout Repository
       uses: actions/checkout@v4
 
@@ -25,12 +30,6 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     
-    - name: Set S3 Object name
-      id: object
-      run: |
-        DATE=$(date +%Y%m%d)
-        echo "app_${DATE}.tar.gz" >> $GITHUB_ENV
-
     - name: Package Repo
       run: |
         DATE=$(date +%Y%m%d)
@@ -38,6 +37,7 @@ jobs:
 
     - name: Upload to S3
       run: |
+        DATE=$(date +%Y%m%d)
         aws s3 cp "app_${DATE}.tar.gz" "s3://${S3BUCKET}/app_${DATE}.tar.gz"
 
 # name: Deploy Workflow
