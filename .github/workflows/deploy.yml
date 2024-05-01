@@ -23,11 +23,16 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    
+    - name: Set S3 Object name
+      run: |
+        DATE=$(date +%Y%m%d)
+        # export S3OBJECT="app_${DATE}.tar.gz"
+        export S3OBJECT="app_20240501.tar.gz"
+        echo "S3 Object: $S3OBJECT" 
         
     # - name: Package Repo
     #   run: |
-    #     DATE=$(date +%Y%m%d)
-    #     S3OBJECT="app_${DATE}.tar.gz"
     #     git archive --format=tar.gz --output=${S3OBJECT} HEAD
     #     mkdir archive
     #     mv ${S3OBJECT} archive/
