@@ -29,18 +29,15 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     
-    - name: Set S3 Object name
+    - name: Package Repo
       id: object
       run: |
         DATE=$(date +%Y%m%d)
-        export s3object=$(echo "app_${DATE}.tar.gz")
+        s3object=$(echo "app_${DATE}.tar.gz")
         # s3object=$(echo "app_20240501.tar.gz")
         echo "S3 Object: $s3object"
         echo "s3object=$s3object" >> $GITHUB_OUTPUT
-
-    - name: Package Repo
-      run: |
-        echo "S3 Object: $s3object"
+        # Archive the repository
         git archive --format=tar.gz --output=${s3object} HEAD
         mkdir archive
         mv ${s3object} archive/
