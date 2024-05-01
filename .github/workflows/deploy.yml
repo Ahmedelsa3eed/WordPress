@@ -24,32 +24,29 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         
-    # - name: Package Repo
-    #   run: |
-    #     DATE=$(date +%Y%m%d)
-    #     S3OBJECT="app_${DATE}.tar.gz"
-    #     git archive --format=tar.gz --output=${S3OBJECT} HEAD
-    #     mkdir archive
-    #     mv ${S3OBJECT} archive/
-    #     ls archive
+    - name: Package Repo
+      run: |
+        DATE=$(date +%Y%m%d)
+        S3OBJECT="app_${DATE}.tar.gz"
+        git archive --format=tar.gz --output=${S3OBJECT} HEAD
+        mkdir archive
+        mv ${S3OBJECT} archive/
+        ls archive
       
-    # - name: Upload to S3
-    #   uses: jakejarvis/s3-sync-action@master
-    #   env:
-    #     AWS_S3_BUCKET: ${{ env.S3BUCKET }}
-    #     AWS_REGION: ${{ env.AWS_REGION }}
-    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     SOURCE_DIR: 'archive'
+    - name: Upload to S3
+      uses: jakejarvis/s3-sync-action@master
+      env:
+        AWS_S3_BUCKET: ${{ env.S3BUCKET }}
+        AWS_REGION: ${{ env.AWS_REGION }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        SOURCE_DIR: 'archive'
 
 
     - name: Deploy to Auto Scaling Group
       run: |
-        # Get the Auto Scaling Group name
-        export auto_scaling_group_name="saeed-ASG"
-
         # Get the instance IDs of instances in the Auto Scaling Group
-        instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name $auto_scaling_group_name --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
+        instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
 
         object_url=$(aws s3 presign s3://saeed-app/${S3OBJECT})
 
@@ -59,6 +56,6 @@ jobs:
           public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
 
           # SSH into the instance and download the object from the S3 bucket
-          ssh -i /path/to/your/private_key.pem ec2-user@$public_ip "wget $object_url -O ${S3OBJECT}"
+          ssh -i ${{ secrets.PRIVATE_KEY_PEM }} ec2-user@$public_ip "wget $object_url -O ${S3OBJECT}"
 
         done
