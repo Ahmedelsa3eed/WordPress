@@ -44,13 +44,15 @@ jobs:
 
 
     - name: Deploy to Auto Scaling Group
+      env:
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_PEM }}
       run: |
         # Get the instance IDs of instances in the Auto Scaling Group
         instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
 
         object_url=$(aws s3 presign s3://saeed-app/${S3OBJECT})
 
-        echo "${{ secrets.PRIVATE_KEY_PEM }}" > private_key && chmod 600 private_key
+        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
 
         # Iterate over each instance
         for instance_id in $instance_ids; do
@@ -58,6 +60,6 @@ jobs:
           public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
 
           # SSH into the instance and download the object from the S3 bucket
-          ssh -i private_key ec2-user@$public_ip "wget $object_url -O ${S3OBJECT}"
+          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget $object_url -O ${S3OBJECT}"
 
         done
