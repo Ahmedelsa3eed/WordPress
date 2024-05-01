@@ -9,6 +9,7 @@ on:
 env:
   AWS_REGION: us-east-1
   S3BUCKET: saeed-app
+  INSTANCE_ID: "i-0fb6cadde51cd1886"
 
 jobs:
   build:
@@ -68,10 +69,10 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        instance-ids: ${{ steps.asg.outputs.instanceids }}
+        instance-ids: ${{ env.INSTANCE_ID }}
 
         working-directory: /home/ec2-user
-        command: ls -al
+        command: touch test.txt
         comment: Hello world!
 
 
