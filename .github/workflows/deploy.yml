@@ -15,10 +15,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    outputs:
-      instanceids: ${{ steps.asg.outputs.instanceids }}
-      s3object: ${{ steps.object.outputs.s3object }}
-
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -29,62 +25,108 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     
-    - name: Package Repo
+    - name: Set S3 Object name
       id: object
       run: |
         DATE=$(date +%Y%m%d)
-        s3object=$(echo "app_${DATE}.tar.gz")
-        # s3object=$(echo "app_20240501.tar.gz")
-        echo "S3 Object: $s3object"
-        echo "s3object=$s3object" >> $GITHUB_OUTPUT
-        # Archive the repository
-        git archive --format=tar.gz --output=${s3object} HEAD
-        mkdir archive
-        mv ${s3object} archive/
-        ls archive
-      
-    - name: Upload to S3
-      uses: jakejarvis/s3-sync-action@master
-      env:
-        AWS_S3_BUCKET: ${{ env.S3BUCKET }}
-        AWS_REGION: ${{ env.AWS_REGION }}
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        SOURCE_DIR: 'archive'
+        echo "app_${DATE}.tar.gz" >> $GITHUB_ENV
 
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: ${{ env.AWS_REGION }}
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-    - name: Deploy to Auto Scaling Group
-      env:
-        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_PEM }}
+    - name: Package Repo
       run: |
-        # Get the instance IDs of instances in the Auto Scaling Group
-        export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
-        echo "Instance IDs: $instance_ids"
+        DATE=$(date +%Y%m%d)
+        tar -zcvf "app_${DATE}.tar.gz" .
 
-        object_url=$(aws s3 presign s3://saeed-app/${{ needs.build.outputs.s3object }})
-        echo "Object URL: $object_url"
+    - name: Upload to S3
+      run: |
+        aws s3 cp "app_${DATE}.tar.gz" "s3://${S3BUCKET}/app_${DATE}.tar.gz"
 
-        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+# name: Deploy Workflow
 
-        echo "s3object: ${{ needs.build.outputs.s3object }}"
+# on:
+#   workflow_dispatch: {}
+#   push:
+#     branches:
+#       - master
 
-        # Iterate over each instance
-        for instance_id in $instance_ids; do
-          # Get the public IP address of the instance
-          public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
+# env:
+#   AWS_REGION: us-east-1
+#   S3BUCKET: saeed-app
+#   INSTANCE_ID: "i-0fb6cadde51cd1886"
 
-          # SSH into the instance and download the object from the S3 bucket
-          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget '$object_url' -O ${{ needs.build.outputs.s3object }}"
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
 
-        done
+#     outputs:
+#       instanceids: ${{ steps.asg.outputs.instanceids }}
+#       s3object: ${{ steps.object.outputs.s3object }}
+
+#     steps:
+#     - name: Checkout Repository
+#       uses: actions/checkout@v4
+
+#     - uses: aws-actions/configure-aws-credentials@v4
+#       with:
+#         aws-region: ${{ env.AWS_REGION }}
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    
+#     - name: Package Repo
+#       id: object
+#       run: |
+#         DATE=$(date +%Y%m%d)
+#         s3object=$(echo "app_${DATE}.tar.gz")
+#         # s3object=$(echo "app_20240501.tar.gz")
+#         echo "S3 Object: $s3object"
+#         echo "s3object=$s3object" >> $GITHUB_OUTPUT
+#         # Archive the repository
+#         git archive --format=tar.gz --output=${s3object} HEAD
+#         mkdir archive
+#         mv ${s3object} archive/
+#         ls archive
+      
+#     - name: Upload to S3
+#       uses: jakejarvis/s3-sync-action@master
+#       env:
+#         AWS_S3_BUCKET: ${{ env.S3BUCKET }}
+#         AWS_REGION: ${{ env.AWS_REGION }}
+#         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         SOURCE_DIR: 'archive'
+
+
+#   deploy:
+#     needs: build
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - uses: aws-actions/configure-aws-credentials@v4
+#       with:
+#         aws-region: ${{ env.AWS_REGION }}
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+#     - name: Deploy to Auto Scaling Group
+#       env:
+#         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_PEM }}
+#       run: |
+#         # Get the instance IDs of instances in the Auto Scaling Group
+#         export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
+#         echo "Instance IDs: $instance_ids"
+
+#         object_url=$(aws s3 presign s3://saeed-app/${{ needs.build.outputs.s3object }})
+#         echo "Object URL: $object_url"
+
+#         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+
+#         echo "s3object: ${{ needs.build.outputs.s3object }}"
+
+#         # Iterate over each instance
+#         for instance_id in $instance_ids; do
+#           # Get the public IP address of the instance
+#           public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
+
+#           # SSH into the instance and download the object from the S3 bucket
+#           ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget '$object_url' -O ${{ needs.build.outputs.s3object }}"
+
+#         done
