@@ -52,7 +52,7 @@ jobs:
       uses: peterkimzz/aws-ssm-send-command@master
       id: ssm
       with:
-        aws-region: ${{ env.S3BUCKET }}
+        aws-region: ${{ env.AWS_REGION }}
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         instance-ids: ${{ steps.asg.outputs.instance_ids }}
