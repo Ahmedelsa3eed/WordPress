@@ -97,6 +97,6 @@ jobs:
           public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
 
           # SSH into the instance and download the object from the S3 bucket
-          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget $object_url -O app_20240501.tar.gz"
+          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "wget '$object_url' -O app_20240501.tar.gz"
 
         done
