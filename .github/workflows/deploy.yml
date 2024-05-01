@@ -46,7 +46,7 @@ jobs:
       id: asg
       run: |
         instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
-        echo "{instance_ids}={$instance_ids}" >> $GITHUB_INSTANCE_IDS
+        echo "{instance_ids}={$instance_ids}" >> $GITHUB_OUTPUT
 
     - name: AWS SSM Send-Command
       uses: peterkimzz/aws-ssm-send-command@master
@@ -55,7 +55,7 @@ jobs:
         aws-region: ${{ env.AWS_REGION }}
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        instance-ids: $GITHUB_INSTANCE_IDS
+        instance-ids: $GITHUB_OUTPUT
 
         working-directory: /home/ec2-user
         command: ls -al
