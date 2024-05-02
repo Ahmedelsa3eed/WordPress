@@ -32,12 +32,11 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
         role-session-name: GitHub_to_AWS_via_FederatedOIDC
     
-    - name: Package Repo
+    - name: Package Repo and Upload to S3
       id: object
       run: |
         DATE=$(date +%Y%m%d)
         s3object=$(echo "app_${DATE}.tar.gz")
-        # s3object=$(echo "app_20240501.tar.gz")
         echo "S3 Object: $s3object"
         echo "s3object=$s3object" >> $GITHUB_OUTPUT
         # Archive the repository
@@ -45,9 +44,6 @@ jobs:
         mkdir archive
         mv ${s3object} archive/
         ls archive
-      
-    - name: Upload to S3
-      run: |
         aws s3 cp archive/${s3object} s3://${{ env.S3BUCKET }}/${s3object}
     
     - name: Create an Expiry ploicy
