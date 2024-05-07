@@ -66,4 +66,4 @@ jobs:
       env:
         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_PEM }}
       run: |
-        aws autoscaling start-instance-refresh --auto-scaling-group-name saeed
+        aws autoscaling update-auto-scaling-group --auto-scaling-group-name saeed --launch-template LaunchTemplateId=lt-0ebf36a7c09b03a8e,Version=Latest
