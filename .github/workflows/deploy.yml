@@ -66,28 +66,4 @@ jobs:
       env:
         PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_PEM }}
       run: |
-        # Get the instance IDs of instances in the Auto Scaling Group
-        export instance_ids=$(aws autoscaling describe-auto-scaling-groups --auto-scaling-group-name saeed --query 'AutoScalingGroups[].Instances[].InstanceId' --output text)
-        echo "Instance IDs: $instance_ids"
-
-        object_url=$(aws s3 presign s3://saeed-app/${{ needs.build.outputs.s3object }})
-        echo "Object URL: $object_url"
-
-        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-
-        echo "s3object: ${{ needs.build.outputs.s3object }}"
-
-        # Iterate over each instance
-        for instance_id in $instance_ids; do
-          # Get the public IP address of the instance
-          public_ip=$(aws ec2 describe-instances --instance-ids $instance_id --query 'Reservations[].Instances[].PublicIpAddress' --output text)
-
-          # SSH into the instance and download the object from the S3 bucket
-          ssh -o StrictHostKeyChecking=no -i private_key ec2-user@$public_ip "
-            cd /var/www/html
-            sudo wget \"$object_url\" -O ${{ needs.build.outputs.s3object }}
-            sudo tar -xvzf ${{ needs.build.outputs.s3object }}
-            sudo rm -rf ${{ needs.build.outputs.s3object }}
-            sudo systemctl restart httpd
-          "
-        done
+        aws autoscaling start-instance-refresh --auto-scaling-group-name saeed
