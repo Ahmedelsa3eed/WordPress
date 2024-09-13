@@ -47,16 +47,14 @@ jobs:
   update-kustomize-values:
     needs: build-push-image-dockerhub
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Setup SSH
-        uses: MrSquaare/ssh-setup-action@v1
+    steps:          
+      - name: Checkout Wordpress_EKS_Cluster
+        uses: actions/checkout@v4
         with:
-            host: github.com
-            private-key: ${{ secrets.INFRA_REPO_PRIVATE_KEY }}
-          
-      - name: Clone repository
-        run: git clone git@github.com:Ahmedelsa3eed/Wordpress_EKS_Cluster.git
+          repository: Ahmedelsa3eed/Wordpress_EKS_Cluster
+          ref: main
+          ssh-key: ${{ secrets.INFRA_REPO_PRIVATE_KEY }}
+          path: Wordpress_EKS_Cluster
 
       - name: Update kustomizations with the new image tag 
         env:
