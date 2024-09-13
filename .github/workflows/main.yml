@@ -49,13 +49,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Wordpress_EKS_Cluster
-        uses: actions/checkout@v4
+      - name: Setup SSH
+        uses: MrSquaare/ssh-setup-action@v1
         with:
-          repository: Ahmedelsa3eed/Wordpress_EKS_Cluster
-          ref: main
-          ssh-key: ${{ secrets.INFRA_REPO_PRIVATE_KEY }}
-          path: Wordpress_EKS_Cluster
+            host: github.com
+            private-key: ${{ secrets.INFRA_REPO_PRIVATE_KEY }}
+          
+      - name: Clone repository
+        run: git clone git@github.com:Ahmedelsa3eed/Wordpress_EKS_Cluster.git
 
       - name: Update kustomizations with the new image tag 
         env:
